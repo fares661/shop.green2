@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GREEN444 | شحن جواهر فري فاير</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<style>
+:root{
+  --bg:#070c08;
+  --surface:#101810;
+  --surface-2:#161f15;
+  --line:#233024;
+  --green:#4cff6b;
+  --green-dim:#2b8a3c;
+  --amber:#ffb020;
+  --red:#ff4d4d;
+  --text:#e8f5e9;
+  --muted:#7c8f7c;
+  --font-display:'Cairo',sans-serif;
+  --font-body:'Tajawal',sans-serif;
+  --font-mono:'Share Tech Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  min-height:100vh;
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(76,255,107,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(76,255,107,0.035) 1px, transparent 1px);
+  background-size:38px 38px;
+  pointer-events:none;
+  z-index:0;
+}
+.scanline{
+  position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:linear-gradient(180deg, transparent 0%, rgba(76,255,107,0.02) 50%, transparent 100%);
+  animation:scan 6s linear infinite;
+}
+@keyframes scan{0%{transform:translateY(-100%);}100%{transform:translateY(100%);}}
+
+.wrap{max-width:640px;margin:0 auto;padding:0 18px 80px;position:relative;z-index:2;}
+
+header.hero{
+  padding:48px 0 28px;
+  text-align:center;
+  position:relative;
+}
+.brand{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--font-mono);
+  font-size:13px;
+  color:var(--green);
+  letter-spacing:3px;
+  border:1px solid var(--line);
+  padding:6px 14px;
+  border-radius:100px;
+  background:rgba(76,255,107,0.04);
+}
+.brand .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+h1.title{
+  font-family:var(--font-display);
+  font-weight:900;
+  font-size:clamp(38px,10vw,58px);
+  margin-top:18px;
+  background:linear-gradient(180deg,#e8f5e9 0%, var(--green) 120%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:1px;
+}
+p.tagline{
+  color:var(--muted);
+  font-size:15px;
+  margin-top:8px;
+}
+
+.steps{
+  display:flex;justify-content:center;gap:6px;
+  margin:26px 0 8px;
+}
+.step-dot{
+  width:26px;height:3px;background:var(--line);border-radius:4px;
+  transition:background .3s;
+}
+.step-dot.active{background:var(--green);box-shadow:0 0 6px var(--green);}
+.step-dot.done{background:var(--green-dim);}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:22px;
+  margin-top:18px;
+  animation:fadeUp .4s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.card h2{
+  font-family:var(--font-display);
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.card h2 .num{
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:var(--bg);
+  background:var(--green);
+  width:22px;height:22px;
+  border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+}
+
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;}
+input[type=text],input[type=tel]{
+  width:100%;
+  background:var(--bg);
+  border:1px solid var(--line);
+  color:var(--text);
+  font-family:var(--font-mono);
+  font-size:16px;
+  padding:14px 16px;
+  border-radius:10px;
+  outline:none;
+  transition:border-color .2s;
+  letter-spacing:1px;
+}
+input:focus{border-color:var(--green);}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;
+  background:var(--green);
+  color:#06170a;
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:15px;
+  padding:14px 18px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  margin-top:14px;
+  transition:transform .15s, box-shadow .15s;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(76,255,107,0.25);}
+.btn:active{transform:translateY(0);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn.ghost{
+  background:transparent;border:1px solid var(--line);color:var(--text);
+}
+.btn.ghost:hover{border-color:var(--green);box-shadow:none;}
+.error-msg{
+  color:var(--red);font-size:13px;margin-top:10px;
+  display:none;
+}
+
+.player-card{
+  display:flex;align-items:center;gap:14px;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:16px;
+  margin-top:6px;
+}
+.player-avatar{
+  width:52px;height:52px;border-radius:10px;
+  background:linear-gradient(135deg,var(--green),var(--green-dim));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:900;font-size:20px;color:#06170a;
+  flex-shrink:0;
+}
+.player-info .name{font-family:var(--font-display);font-weight:700;font-size:17px;}
+.player-info .uid{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-top:2px;}
+
+.packages{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pkg{
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px;
+  cursor:pointer;
+  text-align:center;
+  transition:border-color .2s, transform .15s;
+  position:relative;
+}
+.pkg:hover{border-color:var(--green-dim);transform:translateY(-2px);}
+.pkg.selected{border-color:var(--green);box-shadow:0 0 0 1px var(--green), 0 8px 24px rgba(76,255,107,0.15);}
+.pkg .diamonds{
+  font-family:var(--font-mono);font-size:19px;color:var(--green);font-weight:700;
+}
+.pkg .bonus{font-size:11px;color:var(--amber);margin-top:2px;}
+.pkg .price{
+  font-family:var(--font-display);font-weight:700;font-size:16px;margin-top:8px;
+}
+.pkg .price small{font-size:11px;color:var(--muted);font-weight:400;}
+
+.pay-box{
+  background:var(--surface-2);
+  border:1px dashed var(--green-dim);
+  border-radius:12px;
+  padding:18px;
+  text-align:center;
+}
+.pay-amount{
+  font-family:var(--font-mono);
+  font-size:30px;color:var(--green);font-weight:700;
+}
+.pay-number{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  font-family:var(--font-mono);
+  font-size:22px;letter-spacing:2px;
+  margin-top:14px;
+  background:var(--bg);
+  border-radius:10px;
+  padding:12px;
+}
+.copy-btn{
+  background:var(--line);border:none;color:var(--text);
+  width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:14px;
+  flex-shrink:0;
+}
+.copy-btn.copied{background:var(--green);color:#06170a;}
+.instructions{font-size:13px;color:var(--muted);margin-top:14px;line-height:1.9;text-align:right;}
+
+.upload-zone{
+  border:2px dashed var(--line);
+  border-radius:12px;
+  padding:30px 16px;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color .2s;
+}
+.upload-zone:hover{border-color:var(--green-dim);}
+.upload-zone.has-file{border-color:var(--green);border-style:solid;}
+.upload-zone input{display:none;}
+.upload-icon{font-size:28px;margin-bottom:8px;}
+.preview-img{max-width:100%;border-radius:10px;margin-top:14px;display:none;}
+
+.radar-wrap{
+  display:flex;flex-direction:column;align-items:center;
+  padding:30px 0 10px;
+}
+.radar{
+  width:120px;height:120px;border-radius:50%;
+  border:1px solid var(--green-dim);
+  position:relative;
+  overflow:hidden;
+  background:radial-gradient(circle, rgba(76,255,107,0.06) 0%, transparent 70%);
+}
+.radar::before{
+  content:'';position:absolute;inset:0;
+  background:conic-gradient(from 0deg, rgba(76,255,107,0.5), transparent 40%);
+  animation:sweep 1.4s linear infinite;
+}
+.radar::after{
+  content:'';position:absolute;inset:18%;
+  border:1px solid rgba(76,255,107,0.25);border-radius:50%;
+}
+@keyframes sweep{to{transform:rotate(360deg);}}
+.radar-status{
+  font-family:var(--font-mono);font-size:13px;color:var(--green);margin-top:16px;
+  letter-spacing:1px;
+}
+
+.receipt{
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+}
+.receipt-head{
+  background:var(--green);color:#06170a;
+  padding:18px;text-align:center;
+}
+.receipt-head.pending{background:var(--amber);}
+.receipt-head .status-icon{font-size:26px;}
+.receipt-head .status-text{font-family:var(--font-display);font-weight:900;font-size:17px;margin-top:4px;}
+.receipt-body{padding:18px;}
+.receipt-row{
+  display:flex;justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px dashed var(--line);
+  font-size:14px;
+}
+.receipt-row:last-child{border-bottom:none;}
+.receipt-row .label{color:var(--muted);}
+.receipt-row .value{font-family:var(--font-mono);font-weight:700;}
+.receipt-note{
+  background:var(--bg);
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:13px;
+  color:var(--muted);
+  margin-top:12px;
+  line-height:1.8;
+}
+.receipt-id{
+  text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--muted);
+  padding:10px;border-top:1px dashed var(--line);
+}
+
+footer{
+  text-align:center;padding:30px 0;color:var(--muted);font-size:12px;
+}
+footer a{color:var(--green);text-decoration:none;}
+
+#adminBtn{
+  position:fixed;bottom:14px;left:14px;
+  width:36px;height:36px;border-radius:50%;
+  background:var(--surface);border:1px solid var(--line);
+  color:var(--muted);font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:50;opacity:.4;
+}
+#adminBtn:hover{opacity:1;}
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.75);
+  display:none;align-items:center;justify-content:center;z-index:100;padding:16px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:22px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;
+}
+.order-item{
+  background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
+  padding:12px;margin-bottom:10px;font-size:13px;
+}
+.order-item img{width:100%;border-radius:8px;margin-top:8px;}
+.order-actions{display:flex;gap:8px;margin-top:10px;}
+.order-actions button{flex:1;padding:8px;border-radius:8px;border:none;font-family:var(--font-body);font-weight:700;cursor:pointer;}
+.badge{
+  display:inline-block;font-size:11px;padding:2px 8px;border-radius:100px;font-family:var(--font-mono);
+}
+.badge.pending{background:rgba(255,176,32,0.15);color:var(--amber);}
+.badge.confirmed{background:rgba(76,255,107,0.15);color:var(--green);}
+.badge.rejected{background:rgba(255,77,77,0.15);color:var(--red);}
+
+.refresh-btn{
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  color:var(--text);
+  padding:8px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-family:var(--font-body);
+  font-size:13px;
+  transition:all .2s;
+}
+.refresh-btn:hover{
+  border-color:var(--green);
+  color:var(--green);
+}
+
+@media(max-width:380px){
+  .packages{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="brand"><span class="dot"></span> GREEN444</div>
+    <h1 class="title">شحن جواهر وشدات</h1>
+    <p class="tagline">اختار لعبتك، وأدخل الـ ID، وادفع بسهولة</p>
+  </header>
+
+  <div class="steps">
+    <div class="step-dot active" id="dot0"></div>
+    <div class="step-dot" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+    <div class="step-dot" id="dot4"></div>
+  </div>
+
+  <section class="card" id="step0">
+    <h2><span class="num">0</span> اختار اللعبة</h2>
+    <div class="packages" id="gameGrid"></div>
+  </section>
+
+  <section class="card" id="step1" style="display:none;">
+    <h2><span class="num">1</span> دخول بالـ ID</h2>
+    <label for="ffid" id="idLabel">ايدي فري فاير بتاعك</label>
+    <input type="text" id="ffid" inputmode="numeric" placeholder="مثال: 123456789">
+    <button class="btn" id="lookupBtn" onclick="lookupPlayer()">تسجيل الدخول</button>
+    <div class="error-msg" id="lookupError"></div>
+    <button class="btn ghost" onclick="goToStep(0)">رجوع لاختيار اللعبة</button>
+  </section>
+
+  <section class="card" id="step2" style="display:none;">
+    <h2><span class="num">2</span> بيانات اللاعب</h2>
+    <div class="player-card">
+      <div class="player-avatar" id="avatarLetter">?</div>
+      <div class="player-info">
+        <div class="name" id="playerName">—</div>
+        <div class="uid" id="playerUid">—</div>
+      </div>
+    </div>
+
+    <h2 style="margin-top:22px;"><span class="num">3</span> اختار باقة الجواهر</h2>
+    <div class="packages" id="packagesGrid"></div>
+    <button class="btn" id="continueBtn" disabled onclick="goToPayment()">تأكيد الباقة</button>
+  </section>
+
+  <section class="card" id="step3" style="display:none;">
+    <h2><span class="num">4</span> الدفع فودافون كاش</h2>
+    <div class="pay-box">
+      <div style="color:var(--muted);font-size:13px;">المبلغ المطلوب</div>
+      <div class="pay-amount"><span id="payAmount">0</span> ج.م</div>
+      <div class="pay-number">
+        <span id="vfNumber">01282992676</span>
+        <button class="copy-btn" onclick="copyNumber()" id="copyBtn">نسخ</button>
+      </div>
+      <div class="instructions">
+        1. حوّل المبلغ بالظبط على الرقم اللي فوق عن طريق فودافون كاش<br>
+        2. خد لقطة شاشة (سكرين شوت) للإيصال بعد التحويل<br>
+        3. ارفع الإيصال في الخطوة الجاية عشان نبدأ نراجعه
+      </div>
+    </div>
+    <button class="btn" onclick="goToUpload()">تم التحويل، ارفع الإيصال</button>
+    <button class="btn ghost" onclick="goToStep(2)">رجوع</button>
+  </section>
+
+  <section class="card" id="step4" style="display:none;">
+    <h2><span class="num">5</span> إضافة الإيصال</h2>
+    <div id="uploadArea">
+      <label class="upload-zone" id="uploadZone">
+        <input type="file" id="receiptFile" accept="image/*" capture="environment" onchange="onFileSelected(event)">
+        <div class="upload-icon">📎</div>
+        <div>اضغط هنا لإضافة صورة الإيصال</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">من الكاميرا أو من الاستوديو</div>
+      </label>
+      <img class="preview-img" id="previewImg">
+      <button class="btn" id="verifyBtn" style="display:none;" onclick="verifyReceipt()">فحص الإيصال</button>
+    </div>
+
+    <div class="radar-wrap" id="radarWrap" style="display:none;">
+      <div class="radar"></div>
+      <div class="radar-status" id="radarStatus">جاري فحص الإيصال...</div>
+    </div>
+
+    <div id="receiptResult"></div>
+  </section>
+
+  <section class="card" id="trackSection">
+    <h2><span class="num">؟</span> تتبع طلبك</h2>
+    <label for="trackId">حط رقم الطلب (اللي طلع بعد ما رفعت الإيصال)</label>
+    <input type="text" id="trackId" placeholder="مثال: GRN1755600000000">
+    <button class="btn ghost" onclick="trackOrder()">بحث عن الطلب</button>
+    <div id="trackResult"></div>
+  </section>
+
+  <footer>
+    صُنع بواسطة <a href="#">GREEN444</a> — الطلب هيتراجع يدويًا قبل شحن الجواهر
+  </footer>
+</div>
+
+<div id="adminBtn" onclick="openAdmin()">⚙</div>
+
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <div id="adminLoginView">
+      <h2 style="font-family:var(--font-display);margin-bottom:14px;">دخول الإدارة</h2>
+      <label>كلمة المرور (آخر كود اتبعت على تليجرام)</label>
+      <input type="text" id="adminPass" style="-webkit-text-security:disc;">
+      <button class="btn" onclick="adminLogin()">دخول</button>
+      <button class="btn ghost" onclick="closeAdmin()">إلغاء</button>
+      <div class="error-msg" id="adminError"></div>
+    </div>
+    <div id="adminOrdersView" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h2 style="font-family:var(--font-display);margin:0;">الطلبات</h2>
+        <button class="refresh-btn" onclick="refreshOrders()">🔄 تحديث</button>
+      </div>
+      <div id="ordersList">جاري التحميل...</div>
+      <button class="btn ghost" onclick="closeAdmin()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ CONFIG ============ */
+const CONFIG = {
+  VODAFONE_NUMBER: '01282992676',
+
+  GAMES: {
+    freefire: {
+      label: 'فري فاير',
+      icon: '🔥',
+      idLabel: 'ايدي فري فاير بتاعك',
+      idPlaceholder: 'مثال: 123456789',
+      PACKAGES: [
+        { id:'ff1', diamonds:50,   bonus:0, price:30   },
+        { id:'ff2', diamonds:100,  bonus:0, price:55   },
+        { id:'ff3', diamonds:310,  bonus:0, price:155  },
+        { id:'ff4', diamonds:520,  bonus:0, price:255  },
+        { id:'ff5', diamonds:1060, bonus:0, price:510  },
+        { id:'ff6', diamonds:1300, bonus:0, price:660  },
+        { id:'ff7', diamonds:2000, bonus:0, price:1010 },
+      ]
+    },
+    pubg: {
+      label: 'PUBG Mobile',
+      icon: '🎯',
+      idLabel: 'ايدي ببجي موبايل بتاعك',
+      idPlaceholder: 'مثال: 5204837417',
+      PACKAGES: [
+        { id:'uc1', diamonds:30,   bonus:0,    price:26,  unit:'UC' },
+        { id:'uc2', diamonds:60,   bonus:0,    price:55,  unit:'UC' },
+        { id:'uc3', diamonds:300,  bonus:25,   price:265, unit:'UC' },
+        { id:'uc4', diamonds:600,  bonus:60,   price:520, unit:'UC' },
+        { id:'uc5', diamonds:6000, bonus:2100, price:5115, unit:'UC' },
+      ]
+    }
+  },
+
+  SIAMBHAU_API_KEY: "FFINFO-Free69",
+  SIAMBHAU_BASE_URL: "https://siambhau69.eu.cc/freefireinfo/bhau",
+  SIAMBHAU_REGION: 'BD',
+
+  RAPIDAPI_KEY: '3b9a72eb4emsh96736186d14a980p14a4cejsnd749d084b6fc',
+  RAPIDAPI_HOST: 'id-game-checker.p.rapidapi.com',
+  PUBG_ENDPOINT: 'https://id-game-checker.p.rapidapi.com/pubgm-global/',
+
+  FIREBASE_CONFIG: {
+    apiKey: "AIzaSyC9d3u8FFZfg1vXyW4i8fHgi_FdL9kmtZ0",
+    authDomain: "eeee-c8fab.firebaseapp.com",
+    databaseURL: "https://eeee-c8fab-default-rtdb.firebaseio.com",
+    projectId: "eeee-c8fab",
+    storageBucket: "eeee-c8fab.firebasestorage.app",
+    messagingSenderId: "65860994063",
+    appId: "1:65860994063:web:9f8909d5f8c56857f28f7a"
+  },
+  OCR_SPACE_API_KEY: 'K84714492588957',
+  TELEGRAM_BOT_TOKEN: '8242491995:AAGTt84O4C294ze78O4dfjspX179iIBLTEg',
+  TELEGRAM_CHAT_ID: '6840119557'
+};
+/* =========================================== */
+
+// 🔧 تهيئة Firebase مرة واحدة فقط
+let db = null;
+let firebaseInitialized = false;
+
+function initializeFirebaseOnce() {
+  if (firebaseInitialized) {
+    console.log('✅ Firebase already initialized');
+    return;
+  }
+  
+  try {
+    firebase.initializeApp(CONFIG.FIREBASE_CONFIG);
+    db = firebase.database();
+    firebaseInitialized = true;
+    console.log('✅ Firebase initialized successfully');
+    
+    // اختبار الاتصال
+    db.ref('.info/connected').on('value', (snap) => {
+      if (snap.val() === true) {
+        console.log('✅ Firebase متصل');
+      } else {
+        console.warn('⚠️ Firebase غير متصل');
+      }
+    });
+    
+  } catch(e) {
+    console.error('❌ خطأ في تهيئة Firebase:', e);
+    firebaseInitialized = false;
+  }
+}
+
+// استدعاء التهيئة مرة واحدة
+initializeFirebaseOnce();
+
+let state = {
+  game:null, uid:null, playerName:null, selectedPkg:null, receiptDataUrl:null, orderId:null
+};
+
+function renderGames(){
+  const grid = document.getElementById('gameGrid');
+  grid.innerHTML = '';
+  Object.entries(CONFIG.GAMES).forEach(([key, g])=>{
+    const el = document.createElement('div');
+    el.className = 'pkg';
+    el.onclick = ()=>selectGame(key);
+    el.innerHTML = `
+      <div class="diamonds" style="font-size:28px;">${g.icon}</div>
+      <div class="price" style="margin-top:8px;">${g.label}</div>
+    `;
+    grid.appendChild(el);
+  });
+}
+function selectGame(key){
+  state.game = key;
+  const g = CONFIG.GAMES[key];
+  document.getElementById('idLabel').textContent = g.idLabel;
+  document.getElementById('ffid').placeholder = g.idPlaceholder;
+  document.getElementById('ffid').value = '';
+  document.getElementById('lookupError').style.display = 'none';
+  goToStep(1);
+}
+
+renderGames();
+
+function goToStep(n){
+  [0,1,2,3,4].forEach(i=>{
+    document.getElementById('step'+i).style.display = (i===n)?'block':'none';
+    document.getElementById('dot'+i).classList.toggle('active', i===n);
+    document.getElementById('dot'+i).classList.toggle('done', i<n);
+  });
+}
+
+async function lookupPlayer(){
+  const uid = document.getElementById('ffid').value.trim();
+  const errEl = document.getElementById('lookupError');
+  errEl.style.display='none';
+  if(!uid || uid.length < 4){
+    errEl.textContent = 'اكتب ايدي صحيح';
+    errEl.style.display='block';
+    return;
+  }
+  const btn = document.getElementById('lookupBtn');
+  btn.disabled = true; btn.textContent = 'جاري التحقق...';
+
+  try{
+    let name = null;
+
+    if(state.game === 'freefire'){
+      const url = `${CONFIG.SIAMBHAU_BASE_URL}?uid=${encodeURIComponent(uid)}&region=${CONFIG.SIAMBHAU_REGION}&key=${CONFIG.SIAMBHAU_API_KEY}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data?.error) throw new Error(data.error);
+      name = data?.basicInfo?.nickname;
+    }
+    else if(state.game === 'pubg'){
+      const res = await fetch(CONFIG.PUBG_ENDPOINT + encodeURIComponent(uid), {
+        headers: {
+          'x-rapidapi-host': CONFIG.RAPIDAPI_HOST,
+          'x-rapidapi-key': CONFIG.RAPIDAPI_KEY
+        }
+      });
+      const data = await res.json();
+      if(data?.error) throw new Error(data.msg || 'not found');
+      name = data?.data?.username;
+    }
+
+    if(!name) throw new Error('name not found');
+
+    state.uid = uid;
+    state.playerName = name;
+    document.getElementById('playerName').textContent = name;
+    document.getElementById('playerUid').textContent = 'ID: ' + uid + ' — ' + CONFIG.GAMES[state.game].label;
+    document.getElementById('avatarLetter').textContent = name.charAt(0);
+    renderPackages();
+    goToStep(2);
+  }catch(e){
+    console.error('lookupPlayer error:', e);
+    errEl.textContent = 'مش لاقي بيانات الايدي ده — تأكد إنه صحيح';
+    errEl.style.display='block';
+  }finally{
+    btn.disabled = false; btn.textContent = 'تسجيل الدخول';
+  }
+}
+
+function renderPackages(){
+  const grid = document.getElementById('packagesGrid');
+  grid.innerHTML = '';
+  const unitIcon = state.game === 'pubg' ? '🪙' : '💎';
+  const unitLabel = state.game === 'pubg' ? 'UC' : '';
+  CONFIG.GAMES[state.game].PACKAGES.forEach(pkg=>{
+    const el = document.createElement('div');
+    el.className = 'pkg';
+    el.onclick = ()=>selectPackage(pkg.id, el);
+    el.innerHTML = `
+      <div class="diamonds">${unitIcon} ${pkg.diamonds} ${unitLabel}</div>
+      ${pkg.bonus ? `<div class="bonus">+${pkg.bonus} بونص</div>` : ''}
+      <div class="price">${pkg.price} <small>ج.م</small></div>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+function selectPackage(id, el){
+  document.querySelectorAll('.pkg').forEach(p=>p.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedPkg = CONFIG.GAMES[state.game].PACKAGES.find(p=>p.id===id);
+  document.getElementById('continueBtn').disabled = false;
+}
+
+function goToPayment(){
+  document.getElementById('payAmount').textContent = state.selectedPkg.price;
+  document.getElementById('vfNumber').textContent = CONFIG.VODAFONE_NUMBER;
+  goToStep(3);
+}
+
+function copyNumber(){
+  navigator.clipboard.writeText(CONFIG.VODAFONE_NUMBER);
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = '✓'; btn.classList.add('copied');
+  setTimeout(()=>{ btn.textContent='نسخ'; btn.classList.remove('copied'); }, 1500);
+}
+
+function goToUpload(){ goToStep(4); }
+
+function onFileSelected(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  state.receiptFile = file;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    state.receiptDataUrl = e.target.result;
+    const img = document.getElementById('previewImg');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('uploadZone').classList.add('has-file');
+    document.getElementById('verifyBtn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function normalizeDigits(str){
+  const arabicMap = {'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
+  return (str||'').replace(/[٠-٩]/g, d=>arabicMap[d]).replace(/[^0-9]/g,'');
+}
+
+function compressImageForOCR(file, maxSizeBytes=900000, maxDim=1600){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('file read failed'));
+    reader.onload = e=>{
+      const img = new Image();
+      img.onerror = () => reject(new Error('image decode failed'));
+      img.onload = ()=>{
+        let { width, height } = img;
+        if(width > maxDim || height > maxDim){
+          const scale = Math.min(maxDim/width, maxDim/height);
+          width = Math.round(width*scale);
+          height = Math.round(height*scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        let quality = 0.85;
+        const tryExport = ()=>{
+          canvas.toBlob(blob=>{
+            if(!blob){ reject(new Error('canvas export failed')); return; }
+            if(blob.size > maxSizeBytes && quality > 0.3){
+              quality -= 0.15;
+              tryExport();
+            }else{
+              resolve(blob);
+            }
+          }, 'image/jpeg', quality);
+        };
+        tryExport();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function verifyReceipt(){
+  document.getElementById('uploadArea').style.display = 'none';
+  document.getElementById('radarWrap').style.display = 'flex';
+  const statusEl = document.getElementById('radarStatus');
+  statusEl.textContent = 'جاري فحص الإيصال...';
+
+  let matched = false;
+  try{
+    let fileToSend = state.receiptFile;
+    statusEl.textContent = 'جاري تجهيز الصورة...';
+    fileToSend = await compressImageForOCR(fileToSend, 900000, 1600);
+
+    state.receiptDataUrl = await new Promise((resolve, reject)=>{
+      const r = new FileReader();
+      r.onload = e => resolve(e.target.result);
+      r.onerror = reject;
+      r.readAsDataURL(fileToSend);
+    });
+
+    const formData = new FormData();
+    formData.append('file', fileToSend, 'receipt.jpg');
+    formData.append('apikey', CONFIG.OCR_SPACE_API_KEY);
+    formData.append('language', 'eng');
+
+    statusEl.textContent = 'جاري فحص الإيصال...';
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('OCR timeout after 30s')), 30000)
+    );
+    const fetchPromise = fetch('https://api.ocr.space/parse/image', {
+      method: 'POST',
+      body: formData
+    }).then(r => r.json());
+
+    const data = await Promise.race([fetchPromise, timeoutPromise]);
+
+    if(!data?.ParsedResults || !data.ParsedResults[0]){
+      throw new Error('no parsed results');
+    }
+    const text = data.ParsedResults[0].ParsedText || '';
+    const tokens = normalizeDigits(text).match(/\d+/g) || [];
+    const numberMatch = tokens.includes(CONFIG.VODAFONE_NUMBER);
+    const amountMatch = tokens.includes(String(state.selectedPkg.price));
+    matched = numberMatch && amountMatch;
+  }catch(e){
+    console.warn('OCR failed:', e);
+    matched = false;
+  }
+
+  await finalizeOrder(matched);
+}
+
+async function finalizeOrder(matched){
+  state.orderId = 'GRN' + Date.now();
+  const order = {
+    orderId: state.orderId,
+    game: state.game,
+    gameLabel: CONFIG.GAMES[state.game].label,
+    uid: state.uid,
+    playerName: state.playerName,
+    package: state.selectedPkg,
+    receiptDataUrl: state.receiptDataUrl,
+    autoCheck: matched ? 'matched' : 'unmatched',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+
+  document.getElementById('radarWrap').style.display = 'none';
+  renderReceiptResult(matched);
+
+  // 🔧 الإصلاح: حفظ الطلب في Firebase أولاً
+  if(db) {
+    try {
+      await db.ref('orders/' + order.orderId).set(order);
+      console.log('✅ Order saved to Firebase:', order.orderId);
+    } catch(e) {
+      console.error('❌ Failed to save to Firebase:', e);
+      sendOrderSaveFailedAlert(order, e.message);
+    }
+  } else {
+    console.error('❌ Firebase not initialized');
+    sendOrderSaveFailedAlert(order, 'Firebase not initialized');
+  }
+
+  // بعد الحفظ، ابعت للتليجرام
+  sendOrderToTelegram(order);
+}
+
+async function sendOrderSaveFailedAlert(order, reason){
+  if(!CONFIG.TELEGRAM_BOT_TOKEN || !CONFIG.TELEGRAM_CHAT_ID) return;
+  const text =
+    `⚠️ تنبيه: فشل حفظ الطلب في Firebase\n` +
+    `🔖 رقم الطلب: ${order.orderId}\n` +
+    `السبب: ${reason}`;
+  try{
+    await fetch(`https://api.telegram.org/bot${CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ chat_id: CONFIG.TELEGRAM_CHAT_ID, text })
+    });
+  }catch(e){ console.warn('Failed to send alert:', e); }
+}
+
+function dataURLtoBlob(dataurl){
+  const arr = dataurl.split(',');
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+  return new Blob([u8arr], { type: mime });
+}
+
+async function sendOrderToTelegram(order){
+  if(!CONFIG.TELEGRAM_BOT_TOKEN || !CONFIG.TELEGRAM_CHAT_ID) return;
+  const caption =
+    `🆕 طلب جديد - GREEN444\n` +
+    `🎮 اللعبة: ${order.gameLabel || order.game}\n` +
+    `👤 الاسم: ${order.playerName}\n` +
+    `🆔 الايدي: ${order.uid}\n` +
+    `💎 الباقة: ${order.package.diamonds}${order.package.bonus ? ' +'+order.package.bonus : ''}\n` +
+    `💰 المبلغ: ${order.package.price} ج.م\n` +
+    `${order.autoCheck === 'matched' ? '✅ الفحص التلقائي: مطابق' : '🕓 الفحص التلقائي: محتاج مراجعة يدوية'}\n` +
+    `🔖 رقم الطلب: ${order.orderId}`;
+
+  try{
+    const formData = new FormData();
+    formData.append('chat_id', CONFIG.TELEGRAM_CHAT_ID);
+    formData.append('caption', caption);
+    if(order.receiptDataUrl){
+      formData.append('photo', dataURLtoBlob(order.receiptDataUrl), 'receipt.jpg');
+      const res = await fetch(`https://api.telegram.org/bot${CONFIG.TELEGRAM_BOT_TOKEN}/sendPhoto`, { method:'POST', body: formData });
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.description || 'sendPhoto failed');
+    }
+    console.log('Order sent to Telegram:', order.orderId);
+  }catch(e){
+    console.warn('Telegram notify failed:', e);
+  }
+}
+
+function renderReceiptResult(matched){
+  const box = document.getElementById('receiptResult');
+  const pkg = state.selectedPkg;
+  box.innerHTML = `
+    <div class="receipt">
+      <div class="receipt-head ${matched ? '' : 'pending'}">
+        <div class="status-icon">${matched ? '✅' : '🕓'}</div>
+        <div class="status-text">${matched ? 'تم استلام إيصالك' : 'الإيصال قيد المراجعة اليدوية'}</div>
+      </div>
+      <div class="receipt-body">
+        <div class="receipt-row"><span class="label">اسم اللاعب</span><span class="value">${state.playerName}</span></div>
+        <div class="receipt-row"><span class="label">الايدي</span><span class="value">${state.uid}</span></div>
+        <div class="receipt-row"><span class="label">الباقة</span><span class="value">💎 ${pkg.diamonds}${pkg.bonus ? ' +'+pkg.bonus : ''}</span></div>
+        <div class="receipt-row"><span class="label">المبلغ</span><span class="value">${pkg.price} ج.م</span></div>
+        <div class="receipt-row"><span class="label">الحالة</span><span class="value">${matched ? 'تم الفحص المبدئي ✓' : 'محتاج مراجعة يدوية'}</span></div>
+      </div>
+      <div class="receipt-id">رقم الطلب: ${state.orderId}</div>
+    </div>
+    <button class="btn ghost" style="margin-top:14px;" onclick="startNewOrder()">طلب جديد</button>
+  `;
+}
+
+function startNewOrder(){
+  state = { game:null, uid:null, playerName:null, selectedPkg:null, receiptFile:null, receiptDataUrl:null, orderId:null };
+  document.getElementById('ffid').value = '';
+  document.getElementById('receiptResult').innerHTML = '';
+  document.getElementById('previewImg').style.display = 'none';
+  document.getElementById('previewImg').src = '';
+  document.getElementById('uploadZone').classList.remove('has-file');
+  document.getElementById('verifyBtn').style.display = 'none';
+  document.getElementById('receiptFile').value = '';
+  document.getElementById('uploadArea').style.display = 'block';
+  document.getElementById('continueBtn').disabled = true;
+  goToStep(0);
+}
+
+async function trackOrder(){
+  const idInput = document.getElementById('trackId').value.trim();
+  const resultBox = document.getElementById('trackResult');
+  if(!idInput){
+    resultBox.innerHTML = `<div class="error-msg" style="display:block;">اكتب رقم الطلب الأول</div>`;
+    return;
+  }
+  if(!db){
+    resultBox.innerHTML = `<div class="error-msg" style="display:block;">مشكلة اتصال بالسيرفر</div>`;
+    return;
+  }
+  resultBox.innerHTML = `<div style="color:var(--muted);font-size:13px;margin-top:12px;">جاري البحث...</div>`;
+  try{
+    const snap = await db.ref('orders/' + idInput).once('value');
+    if(!snap.exists()){
+      resultBox.innerHTML = `<div class="error-msg" style="display:block;">مفيش طلب بالرقم ده</div>`;
+      return;
+    }
+    const o = snap.val();
+    const statusMap = {
+      pending: { icon:'🕓', text:'قيد المراجعة', cls:'pending' },
+      confirmed: { icon:'✅', text:'تم الشحن', cls:'' },
+      rejected: { icon:'❌', text:'مرفوض - تواصل معانا', cls:'pending' }
+    };
+    const s = statusMap[o.status] || statusMap.pending;
+    resultBox.innerHTML = `
+      <div class="receipt" style="margin-top:14px;">
+        <div class="receipt-head ${s.cls}">
+          <div class="status-icon">${s.icon}</div>
+          <div class="status-text">${s.text}</div>
+        </div>
+        <div class="receipt-body">
+          <div class="receipt-row"><span class="label">اسم اللاعب</span><span class="value">${o.playerName}</span></div>
+          <div class="receipt-row"><span class="label">الباقة</span><span class="value">💎 ${o.package?.diamonds}${o.package?.bonus ? ' +'+o.package.bonus : ''}</span></div>
+          <div class="receipt-row"><span class="label">المبلغ</span><span class="value">${o.package?.price} ج.م</span></div>
+          <div class="receipt-row"><span class="label">تاريخ الطلب</span><span class="value" style="font-size:12px;">${new Date(o.createdAt).toLocaleString('ar-EG')}</span></div>
+        </div>
+        <div class="receipt-id">رقم الطلب: ${o.orderId}</div>
+      </div>
+    `;
+  }catch(e){
+    console.warn('trackOrder failed:', e);
+    resultBox.innerHTML = `<div class="error-msg" style="display:block;">حصل خطأ، حاول تاني</div>`;
+  }
+}
+
+/* ---------- ADMIN ---------- */
+let currentAdminPassword = null;
+let passwordRotationInterval = null;
+
+function generateRandomPassword(){
+  let p = '';
+  for(let i=0;i<10;i++) p += Math.floor(Math.random()*10);
+  return p;
+}
+
+async function sendPasswordToTelegram(pass){
+  if(!CONFIG.TELEGRAM_BOT_TOKEN || !CONFIG.TELEGRAM_CHAT_ID) return;
+  try{
+    await fetch(`https://api.telegram.org/bot${CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        chat_id: CONFIG.TELEGRAM_CHAT_ID,
+        parse_mode: 'HTML',
+        text: `🔑 كود دخول لوحة إدارة GREEN444:\n<code>${pass}</code>\n\n(صالح لمدة 30 ثانية فقط)`
+      })
+    });
+  }catch(e){ console.warn('Password send failed:', e); }
+}
+
+function rotateAdminPassword(){
+  currentAdminPassword = generateRandomPassword();
+  sendPasswordToTelegram(currentAdminPassword);
+}
+
+function startPasswordRotation(){
+  if(passwordRotationInterval) return;
+  rotateAdminPassword();
+  passwordRotationInterval = setInterval(rotateAdminPassword, 30000);
+}
+
+function stopPasswordRotation(){
+  if(passwordRotationInterval){ clearInterval(passwordRotationInterval); passwordRotationInterval = null; }
+  currentAdminPassword = null;
+}
+
+function openAdmin(){
+  document.getElementById('adminModal').classList.add('open');
+  startPasswordRotation();
+}
+
+function closeAdmin(){
+  document.getElementById('adminModal').classList.remove('open');
+  document.getElementById('adminLoginView').style.display='block';
+  document.getElementById('adminOrdersView').style.display='none';
+  document.getElementById('adminPass').value='';
+  stopOrdersListener();
+  stopPasswordRotation();
+}
+
+function adminLogin(){
+  const pass = document.getElementById('adminPass').value.trim();
+  const errEl = document.getElementById('adminError');
+  errEl.style.display = 'none';
+
+  if(pass !== currentAdminPassword){
+    errEl.textContent = 'الكود غلط أو خلصت صلاحيته';
+    errEl.style.display = 'block';
+    return;
+  }
+  document.getElementById('adminLoginView').style.display='none';
+  document.getElementById('adminOrdersView').style.display='block';
+  loadOrders();
+}
+
+// 🔧 الإصلاح: دالة تحميل الطلبات بدون orderByChild
+function loadOrders(){
+  const list = document.getElementById('ordersList');
+  
+  if(!db){
+    list.innerHTML = 'Firebase مش متصل';
+    return;
+  }
+  
+  list.innerHTML = 'جاري تحميل الطلبات...';
+  
+  db.ref('orders').on('value', snap=>{
+    const orders = [];
+    snap.forEach(child=> {
+      const orderData = child.val();
+      orderData.key = child.key;
+      orders.push(orderData);
+    });
+    
+    // ترتيب حسب createdAt
+    orders.sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
+    
+    console.log(`تم تحميل ${orders.length} طلب`);
+    
+    if(orders.length === 0){ 
+      list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">مفيش طلبات في قاعدة البيانات</div>'; 
+      return; 
+    }
+
+    const pending = orders.filter(o=>o.status === 'pending');
+    const completed = orders.filter(o=>o.status !== 'pending');
+    
+    let html = `
+      <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:15px;">
+        <div style="font-size:13px;color:var(--muted);">
+          📊 الإجمالي: <b style="color:var(--text);">${orders.length}</b> | 
+          🕓 قيد المراجعة: <b style="color:var(--amber);">${pending.length}</b> | 
+          ✅ مكتملة: <b style="color:var(--green);">${completed.length}</b>
+        </div>
+      </div>
+    `;
+    
+    const visible = orders; // عرض كل الطلبات بدون فلترة
+    
+    html += visible.map(o=>{
+      const statusBadge = {
+        'pending': '<span class="badge pending">🕓 قيد المراجعة</span>',
+        'confirmed': '<span class="badge confirmed">✅ تم الشحن</span>',
+        'rejected': '<span class="badge rejected">❌ مرفوض</span>'
+      }[o.status] || `<span class="badge pending">${o.status}</span>`;
+      
+      return `
+      <div class="order-item" style="border-right:3px solid ${o.status === 'pending' ? 'var(--amber)' : 'var(--green)'};">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <b style="font-size:14px;">${o.game === 'pubg' ? '🎯' : '🔥'} ${o.playerName || 'غير معروف'}</b>
+          ${statusBadge}
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:5px;">
+          🆔 ${o.uid || '—'} | 💎 ${o.package?.diamonds || '?'} جوهرة | 💰 ${o.package?.price || '?'} ج.م
+        </div>
+        <div style="color:var(--muted);font-size:11px;margin-bottom:8px;">
+          🔖 ${o.orderId} — ${o.createdAt ? new Date(o.createdAt).toLocaleString('ar-EG') : 'وقت غير معروف'}
+        </div>
+        ${o.receiptDataUrl ? `<img src="${o.receiptDataUrl}" style="cursor:pointer;" onclick="window.open(this.src)">` : '<div style="color:var(--red);font-size:11px;">⚠️ مفيش صورة إيصال</div>'}
+        ${o.status === 'pending' ? `
+        <div class="order-actions">
+          <button style="background:var(--green);color:#06170a;" onclick="updateOrder('${o.key}','confirmed')">✅ تم الشحن</button>
+          <button style="background:var(--red);color:#fff;" onclick="updateOrder('${o.key}','rejected')">❌ رفض</button>
+        </div>` : ''}
+      </div>
+    `}).join('');
+    
+    list.innerHTML = html;
+  }, err=>{
+    console.error('خطأ في تحميل الطلبات:', err);
+    list.innerHTML = `خطأ: ${err.message}`;
+  });
+}
+
+// 🔧 دالة التحديث اليدوي
+function refreshOrders(){
+  console.log('تحديث يدوي للطلبات...');
+  if(db) {
+    try {
+      db.ref('orders').off('value');
+    } catch(e) {}
+  }
+  loadOrders();
+}
+
+function stopOrdersListener(){
+  if(db){ 
+    try {
+      db.ref('orders').off('value'); 
+    } catch(e) {}
+  }
+}
+
+async function updateOrder(key, status){
+  if(!db){
+    alert('مشكلة في الاتصال');
+    return;
+  }
+  try {
+    await db.ref('orders/'+key+'/status').set(status);
+    console.log(`تم تحديث الطلب ${key} إلى ${status}`);
+  } catch(e) {
+    console.error('فشل تحديث الطلب:', e);
+    alert('فشل تحديث الطلب');
+  }
+}
+</script>
+</body>
+</html>
