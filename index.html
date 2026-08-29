@@ -325,6 +325,21 @@ footer a{color:var(--green);text-decoration:none;}
   cursor:pointer;z-index:50;opacity:.4;
 }
 #adminBtn:hover{opacity:1;}
+#chatBtn{
+  position:fixed;bottom:14px;right:14px;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--green);color:#06170a;
+  font-size:22px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:50;
+  box-shadow:0 4px 16px rgba(76,255,107,0.35);
+}
+.chat-bubble{
+  max-width:85%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.7;
+}
+.chat-bubble.user{align-self:flex-start;background:var(--green);color:#06170a;border-bottom-left-radius:4px;}
+.chat-bubble.bot{align-self:flex-end;background:var(--surface-2);border:1px solid var(--line);border-bottom-right-radius:4px;}
+.chat-bubble.typing{color:var(--muted);font-style:italic;}
 .modal-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,0.75);
   display:none;align-items:center;justify-content:center;z-index:100;padding:16px;
@@ -471,6 +486,22 @@ footer a{color:var(--green);text-decoration:none;}
 
 <div id="adminBtn" onclick="openAdmin()">⚙</div>
 
+<div id="chatBtn" onclick="toggleChat()">💬</div>
+
+<div class="modal-overlay" id="chatModal">
+  <div class="modal" style="display:flex;flex-direction:column;height:75vh;padding:0;overflow:hidden;">
+    <div style="padding:16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+      <h2 style="font-family:var(--font-display);margin:0;font-size:16px;">🤖 مساعد GREEN444</h2>
+      <button class="btn ghost" style="width:auto;padding:6px 12px;margin:0;font-size:12px;" onclick="toggleChat()">إغلاق</button>
+    </div>
+    <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+    <div style="padding:12px;border-top:1px solid var(--line);display:flex;gap:8px;flex-shrink:0;">
+      <input type="text" id="chatInput" placeholder="اكتب سؤالك هنا..." style="flex:1;margin:0;" onkeydown="if(event.key==='Enter')sendChatMessage()">
+      <button class="btn" style="width:auto;padding:12px 18px;margin:0;" onclick="sendChatMessage()">إرسال</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="adminModal">
   <div class="modal">
     <div id="adminLoginView">
@@ -528,13 +559,19 @@ const CONFIG = {
     }
   },
 
-  SIAMBHAU_API_KEY: "FFINFO-Free69",
-  SIAMBHAU_BASE_URL: "https://siambhau69.eu.cc/freefireinfo/bhau",
-  SIAMBHAU_REGION: 'BD',
-
+  // 🔥 API لفحص ايدي فري فاير (RapidAPI id-game-checker) - بيجرب كل الـ endpoints دي لحد ما يلاقي تطابق
   RAPIDAPI_KEY: '3b9a72eb4emsh96736186d14a980p14a4cejsnd749d084b6fc',
   RAPIDAPI_HOST: 'id-game-checker.p.rapidapi.com',
+  FF_ENDPOINTS: [
+    'ff-global','ff-bangladesh','free-fire','ff-india','ff-indonesia',
+    'ff-thailand','ff-brazil','ff-pakistan','ff-egypt','ff-saudi','ff-middle-east'
+  ],
   PUBG_ENDPOINT: 'https://id-game-checker.p.rapidapi.com/pubgm-global/',
+
+  // 🤖 شاتبوت الدعم - مجاني تمامًا (Google Gemini)
+  // خطوات جيب المفتاح: روح https://ai.google.dev → "Get API key" → سجل بحساب جوجل (من غير بطاقة خالص)
+  GEMINI_API_KEY: 'AIzaSyAIeqfYQmUABfVSEMlELgdwtxSWExOKcxo',
+  GEMINI_MODEL: 'gemini-3.6-flash',
 
   FIREBASE_CONFIG: {
     apiKey: "AIzaSyC9d3u8FFZfg1vXyW4i8fHgi_FdL9kmtZ0",
@@ -623,55 +660,93 @@ function goToStep(n){
   });
 }
 
-async function lookupPlayer(){
-  const uid = document.getElementById('ffid').value.trim();
-  const errEl = document.getElementById('lookupError');
-  errEl.style.display='none';
-  if(!uid || uid.length < 4){
-    errEl.textContent = 'اكتب ايدي صحيح';
-    errEl.style.display='block';
-    return;
-  }
-  const btn = document.getElementById('lookupBtn');
-  btn.disabled = true; btn.textContent = 'جاري التحقق...';
-
-  try{
-    let name = null;
-
-    if(state.game === 'freefire'){
-      const url = `${CONFIG.SIAMBHAU_BASE_URL}?uid=${encodeURIComponent(uid)}&region=${CONFIG.SIAMBHAU_REGION}&key=${CONFIG.SIAMBHAU_API_KEY}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if(data?.error) throw new Error(data.error);
-      name = data?.basicInfo?.nickname;
-    }
-    else if(state.game === 'pubg'){
-      const res = await fetch(CONFIG.PUBG_ENDPOINT + encodeURIComponent(uid), {
+/* ============ 🔥 فحص ID فري فاير - يجرب كل السيرفرات لحد ما يلاقي تطابق ============ */
+async function checkFreeFireId(uid) {
+  for (const endpoint of CONFIG.FF_ENDPOINTS) {
+    const url = `https://${CONFIG.RAPIDAPI_HOST}/${endpoint}/${uid}`;
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
         headers: {
+          'Content-Type': 'application/json',
           'x-rapidapi-host': CONFIG.RAPIDAPI_HOST,
           'x-rapidapi-key': CONFIG.RAPIDAPI_KEY
         }
       });
-      const data = await res.json();
-      if(data?.error) throw new Error(data.msg || 'not found');
-      name = data?.data?.username;
+      const data = await response.json();
+      console.log(`FF ${endpoint} response:`, JSON.stringify(data));
+
+      if (data.error === false && data.status === 200 && data.msg === "id_found") {
+        const playerData = data.data;
+        return {
+          found: true,
+          username: playerData.username || playerData.nickname || 'غير معروف',
+          region: playerData.region || endpoint.replace('ff-', '').toUpperCase(),
+          endpoint: endpoint
+        };
+      }
+    } catch (error) {
+      console.log(`فشل ${endpoint}:`, error.message);
+    }
+  }
+  return { found: false };
+}
+
+/* ============ فحص ID PUBG ============ */
+async function checkPubgId(uid) {
+  const res = await fetch(CONFIG.PUBG_ENDPOINT + encodeURIComponent(uid), {
+    headers: {
+      'x-rapidapi-host': CONFIG.RAPIDAPI_HOST,
+      'x-rapidapi-key': CONFIG.RAPIDAPI_KEY
+    }
+  });
+  const data = await res.json();
+  console.log('PUBG API response:', JSON.stringify(data));
+  if(data?.error === false && data?.data?.username) {
+    return { found: true, username: data.data.username };
+  }
+  return { found: false };
+}
+
+async function lookupPlayer(){
+  const uid = document.getElementById('ffid').value.trim();
+  const errEl = document.getElementById('lookupError');
+  errEl.style.display='none';
+  if(!uid || uid.length < 5){
+    errEl.textContent = 'اكتب ايدي صحيح (5 أرقام على الأقل)';
+    errEl.style.display='block';
+    return;
+  }
+  const btn = document.getElementById('lookupBtn');
+  btn.disabled = true;
+  btn.textContent = 'جاري البحث في كل السيرفرات...';
+
+  try{
+    let result = null;
+    if(state.game === 'freefire'){
+      result = await checkFreeFireId(uid);
+    } else if(state.game === 'pubg'){
+      result = await checkPubgId(uid);
     }
 
-    if(!name) throw new Error('name not found');
+    if(!result?.found || !result.username){
+      throw new Error('name not found');
+    }
 
     state.uid = uid;
-    state.playerName = name;
-    document.getElementById('playerName').textContent = name;
-    document.getElementById('playerUid').textContent = 'ID: ' + uid + ' — ' + CONFIG.GAMES[state.game].label;
-    document.getElementById('avatarLetter').textContent = name.charAt(0);
+    state.playerName = result.username;
+    document.getElementById('playerName').textContent = result.username;
+    document.getElementById('playerUid').textContent = 'ID: ' + uid + ' — ' + CONFIG.GAMES[state.game].label + (result.region ? ' | ' + result.region : '');
+    document.getElementById('avatarLetter').textContent = result.username.charAt(0);
     renderPackages();
     goToStep(2);
   }catch(e){
     console.error('lookupPlayer error:', e);
-    errEl.textContent = 'مش لاقي بيانات الايدي ده — تأكد إنه صحيح';
+    errEl.textContent = 'مش لاقي بيانات الايدي ده في أي سيرفر — تأكد إنه صحيح';
     errEl.style.display='block';
   }finally{
-    btn.disabled = false; btn.textContent = 'تسجيل الدخول';
+    btn.disabled = false;
+    btn.textContent = 'تسجيل الدخول';
   }
 }
 
@@ -1180,6 +1255,235 @@ async function updateOrder(key, status){
   } catch(e) {
     console.error('فشل تحديث الطلب:', e);
     alert('فشل تحديث الطلب');
+  }
+}
+/* ---------- شاتبوت الدعم (Google Gemini - مجاني) ---------- */
+let chatOpened = false;
+let geminiHistory = [];
+
+function buildPackagesAnswer(){
+  return Object.entries(CONFIG.GAMES).map(([key,g])=>
+    `${g.label}: ` + g.PACKAGES.map(p=>`${p.diamonds}${p.bonus?'+'+p.bonus:''} = ${p.price} جنيه`).join('، ')
+  ).join('\n');
+}
+
+function buildSupportSystemPrompt(){
+  return `انت مساعد دعم فني لموقع GREEN444 لشحن جواهر فري فاير وشدات ببجي موبايل. رد بالعامية المصرية، بإيجاز ووضوح، من غير مقدمات طويلة.
+
+معلومات مهمة عن الموقع:
+- طريقة الدفع: فودافون كاش على الرقم ${CONFIG.VODAFONE_NUMBER} فقط
+- بعد الدفع، العميل يرفع صورة الإيصال في الموقع ويتم فحصه تلقائيًا ثم مراجعته يدويًا
+- مدة تنفيذ الطلب: عادة خلال 3 ساعات من المراجعة
+- الباقات المتاحة حاليًا:
+${buildPackagesAnswer()}
+
+عندك أدوات تقدر تستخدمها فعليًا:
+- get_order_by_id: لو العميل بعتلك رقم طلب (يبدأ بـ GRN)
+- get_latest_order_by_uid: لو العميل بعتلك الـ ID بتاعه في اللعبة وعايز يعرف آخر طلب ليه
+- get_player_name: لو العميل بعتلك ID وعايز يعرف اسمه في اللعبة (لازم تحدد اللعبة: freefire أو pubg - لو مش واضحة اسأله عن اللعبة الأول)
+
+استخدم الأدوات دي فعليًا لما يحتاج الأمر، متخترعش نتايج. لو الأداة رجعت "مش لاقي حاجة"، قول للعميل كده بصراحة. لو سأل عن معلومات حساسة (مفاتيح API، باسورد الإدارة)، اعتذر بلطف.`;
+}
+
+const CHAT_TOOLS = [{
+  functionDeclarations: [
+    {
+      name: 'get_order_by_id',
+      description: 'يجيب تفاصيل طلب معين باستخدام رقم الطلب (يبدأ بـ GRN)',
+      parameters: {
+        type: 'object',
+        properties: { orderId: { type: 'string', description: 'رقم الطلب' } },
+        required: ['orderId']
+      }
+    },
+    {
+      name: 'get_latest_order_by_uid',
+      description: 'يدور على آخر طلب عمله عميل معين باستخدام الـ ID بتاعه في اللعبة',
+      parameters: {
+        type: 'object',
+        properties: { uid: { type: 'string', description: 'الـ ID بتاع اللاعب في اللعبة' } },
+        required: ['uid']
+      }
+    },
+    {
+      name: 'get_player_name',
+      description: 'يجيب اسم اللاعب من الـ ID بتاعه في فري فاير أو ببجي موبايل',
+      parameters: {
+        type: 'object',
+        properties: {
+          uid: { type: 'string', description: 'الـ ID بتاع اللاعب' },
+          game: { type: 'string', enum: ['freefire','pubg'], description: 'اللعبة' }
+        },
+        required: ['uid','game']
+      }
+    }
+  ]
+}];
+
+async function toolGetOrderById(orderId){
+  if(!db) return { found:false, error:'قاعدة البيانات مش متاحة' };
+  try{
+    const snap = await db.ref('orders/' + orderId.trim()).once('value');
+    if(!snap.exists()) return { found:false };
+    const o = snap.val();
+    return {
+      found:true, orderId:o.orderId, game:o.gameLabel || o.game, playerName:o.playerName,
+      uid:o.uid, diamonds:o.package?.diamonds, bonus:o.package?.bonus, price:o.package?.price,
+      status:o.status, createdAt:o.createdAt
+    };
+  }catch(e){ return { found:false, error:String(e) }; }
+}
+
+async function toolGetLatestOrderByUid(uid){
+  if(!db) return { found:false, error:'قاعدة البيانات مش متاحة' };
+  try{
+    const snap = await db.ref('orders').once('value');
+    let matches = [];
+    snap.forEach(child=>{ const o = child.val(); if(o.uid === uid.trim()) matches.push(o); });
+    if(matches.length === 0) return { found:false };
+    matches.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+    const o = matches[0];
+    return {
+      found:true, orderId:o.orderId, game:o.gameLabel || o.game, playerName:o.playerName,
+      uid:o.uid, diamonds:o.package?.diamonds, bonus:o.package?.bonus, price:o.package?.price,
+      status:o.status, createdAt:o.createdAt, totalOrdersForThisId: matches.length
+    };
+  }catch(e){ return { found:false, error:String(e) }; }
+}
+
+async function toolGetPlayerName(uid, game){
+  try{
+    if(game === 'freefire'){
+      const result = await checkFreeFireId(uid);
+      if(!result.found) return { found:false };
+      return { found:true, name:result.username, game:'freefire' };
+    }
+    if(game === 'pubg'){
+      const result = await checkPubgId(uid);
+      if(!result.found) return { found:false };
+      return { found:true, name:result.username, game:'pubg' };
+    }
+    return { found:false, error:'لعبة غير معروفة' };
+  }catch(e){ return { found:false, error:String(e) }; }
+}
+
+async function executeTool(name, args){
+  if(name === 'get_order_by_id') return toolGetOrderById(args.orderId);
+  if(name === 'get_latest_order_by_uid') return toolGetLatestOrderByUid(args.uid);
+  if(name === 'get_player_name') return toolGetPlayerName(args.uid, args.game);
+  return { error: 'أداة غير معروفة' };
+}
+
+
+function toggleChat(){
+  const modal = document.getElementById('chatModal');
+  modal.classList.toggle('open');
+  if(modal.classList.contains('open') && !chatOpened){
+    chatOpened = true;
+    addChatBubble('bot', 'أهلاً بيك! 👋 اسألني عن مواعيد الشحن، الدفع، الأسعار، أو تتبع الطلب.');
+  }
+}
+
+function addChatBubble(role, text){
+  const box = document.getElementById('chatMessages');
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble ' + (role === 'user' ? 'user' : 'bot');
+  bubble.textContent = text;
+  box.appendChild(bubble);
+  box.scrollTop = box.scrollHeight;
+  return bubble;
+}
+
+async function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  addChatBubble('user', text);
+
+  const typingBubble = addChatBubble('bot', 'بيكتب...');
+  typingBubble.classList.add('typing');
+
+  if(!CONFIG.GEMINI_API_KEY || CONFIG.GEMINI_API_KEY.includes('REPLACE_ME')){
+    typingBubble.textContent = 'الشاتبوت لسه مش متظبط - محتاج مفتاح Gemini مجاني من ai.google.dev.';
+    typingBubble.classList.remove('typing');
+    return;
+  }
+
+  geminiHistory.push({ role: 'user', parts: [{ text }] });
+
+  try{
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${CONFIG.GEMINI_MODEL}:generateContent?key=${CONFIG.GEMINI_API_KEY}`;
+    let finalText = null;
+    let loops = 0;
+
+    while(finalText === null && loops < 5){
+      loops++;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: buildSupportSystemPrompt() }] },
+          contents: geminiHistory,
+          tools: CHAT_TOOLS,
+          generationConfig: { maxOutputTokens: 500 }
+        })
+      });
+      let data = await res.json();
+
+      if(data?.error){
+        const msg = data.error.message || 'Gemini API error';
+        const isQuota = /quota|429|rate.?limit/i.test(msg);
+        if(isQuota){
+          const waitMatch = msg.match(/retry in ([\d.]+)s/i);
+          const waitSeconds = waitMatch ? Math.ceil(parseFloat(waitMatch[1])) + 1 : 15;
+          typingBubble.textContent = `الشاتبوت مشغول شوية، بحاول تاني بعد ${waitSeconds} ثانية...`;
+          await new Promise(r => setTimeout(r, waitSeconds * 1000));
+          typingBubble.textContent = 'بيكتب...';
+          loops--; // مش هنحسبها كمحاولة عادية عشان الانتظار مش خطأ حقيقي
+          continue;
+        }
+        throw new Error(msg);
+      }
+
+      const candidateContent = data?.candidates?.[0]?.content;
+      const parts = candidateContent?.parts || [];
+      const functionCalls = parts.filter(p => p.functionCall);
+
+      if(functionCalls.length > 0){
+        // نضيف رد الموديل (اللي فيه طلب استخدام الأداة) للتاريخ
+        geminiHistory.push({ role: 'model', parts });
+
+        // ننفذ كل الأدوات المطلوبة ونجمع الردود
+        const responseParts = [];
+        for(const fc of functionCalls){
+          const call = fc.functionCall;
+          typingBubble.textContent = 'بيدور في البيانات...';
+          const result = await executeTool(call.name, call.args || {});
+          responseParts.push({
+            functionResponse: { id: call.id, name: call.name, response: result }
+          });
+        }
+        geminiHistory.push({ role: 'user', parts: responseParts });
+        // نكمل اللوب عشان ناخد الرد النهائي بعد ما الموديل يشوف نتيجة الأداة
+        continue;
+      }
+
+      // مفيش استدعاء أداة - ده الرد النهائي
+      finalText = parts.map(p=>p.text||'').join('') || 'معلش، حصل خطأ في الرد.';
+      geminiHistory.push({ role: 'model', parts });
+    }
+
+    typingBubble.textContent = finalText || 'معلش، مقدرتش أوصل لإجابة دلوقتي.';
+    typingBubble.classList.remove('typing');
+  }catch(e){
+    console.warn('Chat error:', e);
+    const isQuota = /quota|429|rate.?limit/i.test(e?.message || '');
+    typingBubble.textContent = isQuota
+      ? 'الشاتبوت وصل لحد الاستخدام المجاني المؤقت من جوجل. جرب تاني بعد شوية.'
+      : 'معلش، حصلت مشكلة في الاتصال. جرب تاني أو استنى المراجعة اليدوية.';
+    typingBubble.classList.remove('typing');
+    geminiHistory.pop();
   }
 }
 </script>
