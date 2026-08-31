@@ -124,21 +124,23 @@ p.tagline{
   display:flex;align-items:center;justify-content:center;
 }
 
-label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;}
-input[type=text],input[type=tel]{
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:10px;}
+input[type=text],input[type=tel],input[type=number]{
   width:100%;
   background:var(--bg);
-  border:1px solid var(--line);
+  border:1.5px solid var(--line);
   color:var(--text);
   font-family:var(--font-mono);
-  font-size:16px;
-  padding:14px 16px;
-  border-radius:10px;
+  font-size:19px;
+  padding:18px 18px;
+  border-radius:12px;
   outline:none;
-  transition:border-color .2s;
-  letter-spacing:1px;
+  transition:border-color .2s, box-shadow .2s;
+  letter-spacing:1.5px;
+  margin-top:4px;
+  margin-bottom:4px;
 }
-input:focus{border-color:var(--green);}
+input:focus{border-color:var(--green); box-shadow:0 0 0 3px rgba(76,255,107,0.12);}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
   width:100%;
@@ -151,7 +153,7 @@ input:focus{border-color:var(--green);}
   border:none;
   border-radius:10px;
   cursor:pointer;
-  margin-top:14px;
+  margin-top:20px;
   transition:transform .15s, box-shadow .15s;
 }
 .btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(76,255,107,0.25);}
@@ -413,6 +415,7 @@ footer a{color:var(--green);text-decoration:none;}
     <input type="text" id="ffid" inputmode="numeric" placeholder="مثال: 123456789">
     <button class="btn" id="lookupBtn" onclick="lookupPlayer()">تسجيل الدخول</button>
     <div class="error-msg" id="lookupError"></div>
+    <div id="utilityResult"></div>
     <button class="btn ghost" onclick="goToStep(0)">رجوع لاختيار اللعبة</button>
   </section>
 
@@ -556,6 +559,43 @@ const CONFIG = {
         { id:'uc4', diamonds:600,  bonus:60,   price:520, unit:'UC' },
         { id:'uc5', diamonds:6000, bonus:2100, price:5115, unit:'UC' },
       ]
+    },
+    deltaforce: {
+      label: 'Delta Force',
+      icon: '⚔️',
+      idLabel: 'ايدي Delta Force بتاعك',
+      idPlaceholder: 'مثال: 182200303107200135203',
+      PACKAGES: [
+        { id:'df1', diamonds:18,   bonus:0, price:16,   unit:'عملة' },
+        { id:'df2', diamonds:30,   bonus:0, price:27,   unit:'عملة' },
+        { id:'df3', diamonds:60,   bonus:0, price:50,   unit:'عملة' },
+        { id:'df4', diamonds:300,  bonus:0, price:250,  unit:'عملة' },
+        { id:'df5', diamonds:420,  bonus:0, price:350,  unit:'عملة' },
+        { id:'df6', diamonds:680,  bonus:0, price:500,  unit:'عملة' },
+        { id:'df7', diamonds:1280, bonus:0, price:990,  unit:'عملة' },
+        { id:'df8', diamonds:1700, bonus:0, price:1300, unit:'عملة' },
+        { id:'df9', diamonds:8424, bonus:0, price:5000, unit:'عملة' },
+      ]
+    },
+    ff_cards: {
+      label: 'بطاقات فري فاير (جارينا)',
+      icon: '🎫',
+      isCardProduct: true,
+      idLabel: 'رقم واتساب أو بريد إلكتروني (هيوصلك عليه كود البطاقة)',
+      idPlaceholder: 'مثال: 01012345678 أو email@example.com',
+      PACKAGES: [
+        { id:'card1', diamonds:110,  bonus:0, price:70,  unit:'جوهرة' },
+        { id:'card2', diamonds:230,  bonus:0, price:140, unit:'جوهرة' },
+        { id:'card3', diamonds:580,  bonus:0, price:330, unit:'جوهرة' },
+        { id:'card4', diamonds:1188, bonus:0, price:660, unit:'جوهرة' },
+      ]
+    },
+    clan_check: {
+      label: 'تحقق من الرابطة',
+      icon: '🛡️',
+      isUtility: 'clan', // أداة معلومات بس - مفيش شراء بعدها
+      idLabel: 'ايدي فري فاير بتاعك',
+      idPlaceholder: 'مثال: 123456789'
     }
   },
 
@@ -567,6 +607,11 @@ const CONFIG = {
     'ff-thailand','ff-brazil','ff-pakistan','ff-egypt','ff-saudi','ff-middle-east'
   ],
   PUBG_ENDPOINT: 'https://id-game-checker.p.rapidapi.com/pubgm-global/',
+  // 🛡️ مفتاح SiamBhau منفصل - لأداة تحقق الجيلد بس (مش مرتبط بشحن فري فاير)
+  SIAMBHAU_CLAN_KEY: 'green444:FFINFO:AGL',
+  SIAMBHAU_CLAN_URL: 'https://siambhau69.eu.cc/freefireinfo/bhau',
+  SIAMBHAU_CLAN_REGION: 'BD',
+  DELTAFORCE_ENDPOINT: 'https://id-game-checker.p.rapidapi.com/dfm-garena/',
 
   // 🤖 شاتبوت الدعم - مجاني تمامًا (Google Gemini)
   // خطوات جيب المفتاح: روح https://ai.google.dev → "Get API key" → سجل بحساب جوجل (من غير بطاقة خالص)
@@ -647,6 +692,20 @@ function selectGame(key){
   document.getElementById('ffid').placeholder = g.idPlaceholder;
   document.getElementById('ffid').value = '';
   document.getElementById('lookupError').style.display = 'none';
+
+  const lookupBtn = document.getElementById('lookupBtn');
+  const idInput = document.getElementById('ffid');
+  document.getElementById('utilityResult').innerHTML = '';
+  if(g.isCardProduct){
+    lookupBtn.textContent = 'متابعة';
+    idInput.type = 'text'; // مش رقم بس - عشان ممكن يكتب إيميل
+  }else if(g.isUtility){
+    lookupBtn.textContent = 'تحقق';
+    idInput.type = 'number';
+  }else{
+    lookupBtn.textContent = 'تسجيل الدخول';
+    idInput.type = 'number';
+  }
   goToStep(1);
 }
 
@@ -708,10 +767,119 @@ async function checkPubgId(uid) {
   return { found: false };
 }
 
+/* ============ فحص ID Delta Force ============ */
+async function checkDeltaForceId(uid) {
+  const res = await fetch(CONFIG.DELTAFORCE_ENDPOINT + encodeURIComponent(uid), {
+    headers: {
+      'x-rapidapi-host': CONFIG.RAPIDAPI_HOST,
+      'x-rapidapi-key': CONFIG.RAPIDAPI_KEY
+    }
+  });
+  const data = await res.json();
+  console.log('Delta Force API response:', JSON.stringify(data));
+  if(data?.error === false && data?.data?.username) {
+    return { found: true, username: data.data.username };
+  }
+  return { found: false };
+}
+
 async function lookupPlayer(){
   const uid = document.getElementById('ffid').value.trim();
   const errEl = document.getElementById('lookupError');
   errEl.style.display='none';
+
+  const currentGame = CONFIG.GAMES[state.game];
+  const utilityBox = document.getElementById('utilityResult');
+  utilityBox.innerHTML = '';
+
+  // --- أداة تحقق الجيلد: مفيش شراء، بس نتيجة تحقق ---
+  if(currentGame?.isUtility === 'clan'){
+    if(!uid || uid.length < 5){
+      errEl.textContent = 'اكتب ايدي صحيح';
+      errEl.style.display='block';
+      return;
+    }
+    const btn = document.getElementById('lookupBtn');
+    btn.disabled = true; btn.textContent = 'جاري التحقق...';
+    try{
+      const url = `${CONFIG.SIAMBHAU_CLAN_URL}?uid=${encodeURIComponent(uid)}&region=${CONFIG.SIAMBHAU_CLAN_REGION}&key=${CONFIG.SIAMBHAU_CLAN_KEY}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      console.log('Clan check raw response:', JSON.stringify(data));
+
+      if(data?.error){
+        errEl.textContent = typeof data.error === 'string' ? data.error : 'الخدمة مشغولة مؤقتًا، جرب بعد شوية';
+        errEl.style.display='block';
+        return;
+      }
+
+      const name = data?.basicInfo?.nickname || 'غير معروف';
+      const clanInfo = data?.clanBasicInfo || data?.guildInfo || data?.clan;
+      const clanName = clanInfo?.clanName || clanInfo?.guildName || clanInfo?.name;
+      const inClan = !!clanName;
+
+      if(inClan){
+        // اللاعب في رابطة بالفعل - لازم يسيبها الأول
+        utilityBox.innerHTML = `
+          <div class="receipt" style="margin-top:14px;">
+            <div class="receipt-head pending">
+              <div class="status-icon">🛡️</div>
+              <div class="status-text">انت في رابطة بالفعل</div>
+            </div>
+            <div class="receipt-body">
+              <div class="receipt-row"><span class="label">اسم اللاعب</span><span class="value">${name}</span></div>
+              <div class="receipt-row"><span class="label">الرابطة الحالية</span><span class="value">${clanName}</span></div>
+              <div class="receipt-note">لازم تسيب الرابطة الحالية بتاعتك الأول، وبعد كده جرب تاني عشان تقدر تدخل رابطتنا.</div>
+            </div>
+          </div>
+        `;
+      }else{
+        // مش في رابطة - نعرضله كود رابطتنا
+        utilityBox.innerHTML = `<div style="color:var(--muted);font-size:13px;margin-top:14px;">جاري البحث عن رابطة...</div>`;
+        await new Promise(r => setTimeout(r, 1200));
+        utilityBox.innerHTML = `
+          <div class="receipt" style="margin-top:14px;">
+            <div class="receipt-head">
+              <div class="status-icon">✅</div>
+              <div class="status-text">مفيش رابطة عندك - تقدر تدخل رابطتنا</div>
+            </div>
+            <div class="receipt-body">
+              <div class="receipt-row"><span class="label">اسم اللاعب</span><span class="value">${name}</span></div>
+              <div class="receipt-row"><span class="label">كود الرابطة</span><span class="value">3103705599</span></div>
+              <div class="receipt-note">ده كود رابطتنا - خش عليها من داخل اللعبة بالكود ده.</div>
+            </div>
+          </div>
+        `;
+      }
+    }catch(e){
+      console.warn('clan check failed:', e);
+      errEl.textContent = 'حصل خطأ في الاتصال، حاول تاني';
+      errEl.style.display='block';
+    }finally{
+      btn.disabled = false; btn.textContent = 'تحقق';
+    }
+    return; // منكملش لخطوة الباقات - الأداة دي معلومات بس
+  }
+
+  // --- منتجات البطاقات: بنتحقق من رقم/إيميل بس، من غير أي API ---
+  if(currentGame?.isCardProduct){
+    const isPhone = /^01[0125][0-9]{8}$/.test(uid.replace(/\s/g,''));
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(uid);
+    if(!isPhone && !isEmail){
+      errEl.textContent = 'اكتب رقم واتساب مصري صحيح (01xxxxxxxxx) أو بريد إلكتروني صحيح';
+      errEl.style.display='block';
+      return;
+    }
+    state.uid = uid;
+    state.playerName = null; // مفيش اسم لاعب في منتج البطاقات
+    document.getElementById('playerName').textContent = 'بطاقة فري فاير (جارينا)';
+    document.getElementById('playerUid').textContent = 'التواصل: ' + uid;
+    document.getElementById('avatarLetter').textContent = '🎫';
+    renderPackages();
+    goToStep(2);
+    return;
+  }
+
   if(!uid || uid.length < 5){
     errEl.textContent = 'اكتب ايدي صحيح (5 أرقام على الأقل)';
     errEl.style.display='block';
@@ -727,6 +895,8 @@ async function lookupPlayer(){
       result = await checkFreeFireId(uid);
     } else if(state.game === 'pubg'){
       result = await checkPubgId(uid);
+    } else if(state.game === 'deltaforce'){
+      result = await checkDeltaForceId(uid);
     }
 
     if(!result?.found || !result.username){
@@ -753,12 +923,13 @@ async function lookupPlayer(){
 function renderPackages(){
   const grid = document.getElementById('packagesGrid');
   grid.innerHTML = '';
-  const unitIcon = state.game === 'pubg' ? '🪙' : '💎';
-  const unitLabel = state.game === 'pubg' ? 'UC' : '';
+  const unitIcons = { pubg:'🪙', deltaforce:'⚔️', freefire:'💎', ff_cards:'🎫' };
+  const unitIcon = unitIcons[state.game] || '💎';
   CONFIG.GAMES[state.game].PACKAGES.forEach(pkg=>{
     const el = document.createElement('div');
     el.className = 'pkg';
     el.onclick = ()=>selectPackage(pkg.id, el);
+    const unitLabel = pkg.unit || '';
     el.innerHTML = `
       <div class="diamonds">${unitIcon} ${pkg.diamonds} ${unitLabel}</div>
       ${pkg.bonus ? `<div class="bonus">+${pkg.bonus} بونص</div>` : ''}
@@ -788,7 +959,15 @@ function copyNumber(){
   setTimeout(()=>{ btn.textContent='نسخ'; btn.classList.remove('copied'); }, 1500);
 }
 
-function goToUpload(){ goToStep(4); }
+function goToUpload(){
+  const fileInput = document.getElementById('receiptFile');
+  if(CONFIG.GAMES[state.game]?.isCardProduct){
+    fileInput.removeAttribute('capture'); // بطاقات: رفع من الملفات بس، من غير كاميرا
+  }else{
+    fileInput.setAttribute('capture', 'environment');
+  }
+  goToStep(4);
+}
 
 function onFileSelected(ev){
   const file = ev.target.files[0];
@@ -902,11 +1081,14 @@ async function verifyReceipt(){
 
 async function finalizeOrder(matched){
   state.orderId = 'GRN' + Date.now();
+  const isCardProduct = !!CONFIG.GAMES[state.game].isCardProduct;
   const order = {
     orderId: state.orderId,
     game: state.game,
     gameLabel: CONFIG.GAMES[state.game].label,
+    isCardProduct: isCardProduct,
     uid: state.uid,
+    contact: isCardProduct ? state.uid : null,
     playerName: state.playerName,
     package: state.selectedPkg,
     receiptDataUrl: state.receiptDataUrl,
@@ -964,11 +1146,14 @@ function dataURLtoBlob(dataurl){
 
 async function sendOrderToTelegram(order){
   if(!CONFIG.TELEGRAM_BOT_TOKEN || !CONFIG.TELEGRAM_CHAT_ID) return;
+  const identityLines = order.isCardProduct
+    ? `📇 التواصل (واتساب/إيميل): ${order.contact}\n🎫 نوع الطلب: بطاقة جارينا - محتاج إرسال كود البطاقة يدويًا\n`
+    : `👤 الاسم: ${order.playerName}\n🆔 الايدي: ${order.uid}\n`;
+
   const caption =
     `🆕 طلب جديد - GREEN444\n` +
     `🎮 اللعبة: ${order.gameLabel || order.game}\n` +
-    `👤 الاسم: ${order.playerName}\n` +
-    `🆔 الايدي: ${order.uid}\n` +
+    identityLines +
     `💎 الباقة: ${order.package.diamonds}${order.package.bonus ? ' +'+order.package.bonus : ''}\n` +
     `💰 المبلغ: ${order.package.price} ج.م\n` +
     `${order.autoCheck === 'matched' ? '✅ الفحص التلقائي: مطابق' : '🕓 الفحص التلقائي: محتاج مراجعة يدوية'}\n` +
@@ -993,6 +1178,15 @@ async function sendOrderToTelegram(order){
 function renderReceiptResult(matched){
   const box = document.getElementById('receiptResult');
   const pkg = state.selectedPkg;
+  const isCardProduct = !!CONFIG.GAMES[state.game].isCardProduct;
+  const contactRow = isCardProduct
+    ? `<div class="receipt-row"><span class="label">التواصل</span><span class="value" style="font-size:12px;">${state.uid}</span></div>`
+    : `<div class="receipt-row"><span class="label">اسم اللاعب</span><span class="value">${state.playerName}</span></div>
+       <div class="receipt-row"><span class="label">الايدي</span><span class="value">${state.uid}</span></div>`;
+  const deliveryNote = isCardProduct
+    ? 'سيتم إرسال كود البطاقة على رقمك/إيميلك خلال 3 ساعات من مراجعة الإيصال.'
+    : '';
+
   box.innerHTML = `
     <div class="receipt">
       <div class="receipt-head ${matched ? '' : 'pending'}">
@@ -1000,11 +1194,11 @@ function renderReceiptResult(matched){
         <div class="status-text">${matched ? 'تم استلام إيصالك' : 'الإيصال قيد المراجعة اليدوية'}</div>
       </div>
       <div class="receipt-body">
-        <div class="receipt-row"><span class="label">اسم اللاعب</span><span class="value">${state.playerName}</span></div>
-        <div class="receipt-row"><span class="label">الايدي</span><span class="value">${state.uid}</span></div>
+        ${contactRow}
         <div class="receipt-row"><span class="label">الباقة</span><span class="value">💎 ${pkg.diamonds}${pkg.bonus ? ' +'+pkg.bonus : ''}</span></div>
         <div class="receipt-row"><span class="label">المبلغ</span><span class="value">${pkg.price} ج.م</span></div>
         <div class="receipt-row"><span class="label">الحالة</span><span class="value">${matched ? 'تم الفحص المبدئي ✓' : 'محتاج مراجعة يدوية'}</span></div>
+        ${deliveryNote ? `<div class="receipt-note">${deliveryNote}</div>` : ''}
       </div>
       <div class="receipt-id">رقم الطلب: ${state.orderId}</div>
     </div>
@@ -1016,6 +1210,7 @@ function startNewOrder(){
   state = { game:null, uid:null, playerName:null, selectedPkg:null, receiptFile:null, receiptDataUrl:null, orderId:null };
   document.getElementById('ffid').value = '';
   document.getElementById('receiptResult').innerHTML = '';
+  document.getElementById('utilityResult').innerHTML = '';
   document.getElementById('previewImg').style.display = 'none';
   document.getElementById('previewImg').src = '';
   document.getElementById('uploadZone').classList.remove('has-file');
@@ -1058,7 +1253,10 @@ async function trackOrder(){
           <div class="status-text">${s.text}</div>
         </div>
         <div class="receipt-body">
-          <div class="receipt-row"><span class="label">اسم اللاعب</span><span class="value">${o.playerName}</span></div>
+          ${o.isCardProduct
+            ? `<div class="receipt-row"><span class="label">التواصل</span><span class="value" style="font-size:12px;">${o.contact}</span></div>`
+            : `<div class="receipt-row"><span class="label">اسم اللاعب</span><span class="value">${o.playerName}</span></div>`
+          }
           <div class="receipt-row"><span class="label">الباقة</span><span class="value">💎 ${o.package?.diamonds}${o.package?.bonus ? ' +'+o.package.bonus : ''}</span></div>
           <div class="receipt-row"><span class="label">المبلغ</span><span class="value">${o.package?.price} ج.م</span></div>
           <div class="receipt-row"><span class="label">تاريخ الطلب</span><span class="value" style="font-size:12px;">${new Date(o.createdAt).toLocaleString('ar-EG')}</span></div>
@@ -1200,12 +1398,13 @@ function loadOrders(){
       return `
       <div class="order-item" style="border-right:3px solid ${o.status === 'pending' ? 'var(--amber)' : 'var(--green)'};">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <b style="font-size:14px;">${o.game === 'pubg' ? '🎯' : '🔥'} ${o.playerName || 'غير معروف'}</b>
+          <b style="font-size:14px;">${o.game === 'pubg' ? '🎯' : o.game === 'deltaforce' ? '⚔️' : o.isCardProduct ? '🎫' : '🔥'} ${o.isCardProduct ? 'بطاقة جارينا' : (o.playerName || 'غير معروف')}</b>
           ${statusBadge}
         </div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:5px;">
-          🆔 ${o.uid || '—'} | 💎 ${o.package?.diamonds || '?'} جوهرة | 💰 ${o.package?.price || '?'} ج.م
+          ${o.isCardProduct ? `📇 ${o.contact || '—'}` : `🆔 ${o.uid || '—'}`} | 💎 ${o.package?.diamonds || '?'} جوهرة | 💰 ${o.package?.price || '?'} ج.م
         </div>
+        ${o.isCardProduct ? `<div style="color:var(--amber);font-size:11px;margin-bottom:5px;">⚠️ لازم تبعت كود البطاقة يدويًا بعد التأكيد</div>` : ''}
         <div style="color:var(--muted);font-size:11px;margin-bottom:8px;">
           🔖 ${o.orderId} — ${o.createdAt ? new Date(o.createdAt).toLocaleString('ar-EG') : 'وقت غير معروف'}
         </div>
@@ -1312,7 +1511,7 @@ const CHAT_TOOLS = [{
         type: 'object',
         properties: {
           uid: { type: 'string', description: 'الـ ID بتاع اللاعب' },
-          game: { type: 'string', enum: ['freefire','pubg'], description: 'اللعبة' }
+          game: { type: 'string', enum: ['freefire','pubg','deltaforce'], description: 'اللعبة' }
         },
         required: ['uid','game']
       }
@@ -1362,6 +1561,11 @@ async function toolGetPlayerName(uid, game){
       const result = await checkPubgId(uid);
       if(!result.found) return { found:false };
       return { found:true, name:result.username, game:'pubg' };
+    }
+    if(game === 'deltaforce'){
+      const result = await checkDeltaForceId(uid);
+      if(!result.found) return { found:false };
+      return { found:true, name:result.username, game:'deltaforce' };
     }
     return { found:false, error:'لعبة غير معروفة' };
   }catch(e){ return { found:false, error:String(e) }; }
